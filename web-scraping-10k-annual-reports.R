@@ -7,6 +7,7 @@
 # web scrape and then save to csv to save time
 
 library(tidyverse)
+library(caret)  # For predictive modeling
 library(keyATM)
 library(quanteda)
 library(tidyverse)
@@ -97,6 +98,35 @@ for(i in 1:50) {
 
 # Print the test list to check extracted URLs
 print(test)
+
+# Function to predict stock price movement based on sentiment score
+predict_stock_movement <- function(sentiment_df, stock_prices) {
+  # Prepare data for modeling
+  model_data <- stock_prices %>%
+    left_join(sentiment_df, by = c("symbol" = "ticker")) %>%
+    filter(!is.na(sentiment_score)) %>%
+    select(date, close, sentiment_score)
+  
+  # Train a simple linear regression model
+  model <- train(
+    close ~ sentiment_score,
+    data = model_data,
+    method = "lm"
+  )
+  
+  # Predict future stock prices
+  predictions <- predict(model, newdata = model_data)
+  
+  # Add predictions to the data
+  model_data <- model_data %>%
+    mutate(predicted_close = predictions)
+  
+  return(model_data)
+}
+
+# Call the function and print predictions
+predicted_data <- predict_stock_movement(sentiment_df, stock_prices)
+print(predicted_data)
 
 # Close the browser and server when done
 remDr$close()
@@ -480,10 +510,12 @@ stock_prices <- tq_get(
 stock_prices <- stock_prices %>%
   left_join(sentiment_df, by = c("symbol" = "ticker"))
 
-# Create the plot with actual sentiment scores
+# Create the plot with actual sentiment scores and predicted stock prices
+predicted_data <- predict_stock_movement(sentiment_df, stock_prices)
 ggplot(stock_prices, aes(x = date)) +
   geom_line(aes(y = close, color = "Stock Price"), size = 1) +  # Plot stock prices
   geom_hline(data = sentiment_df, aes(yintercept = sentiment_score, color = "Sentiment Score"), linetype = "dashed", size = 1) +  # Overlay sentiment scores
+  geom_line(data = predicted_data, aes(y = predicted_close, color = "Predicted Price"), linetype = "dotted", size = 1) +  # Add predicted prices
   facet_wrap(~ symbol, scales = "free_y") +  # Separate panels for each ticker
   labs(
     title = "Stock Prices and Sentiment Scores Over Time",
