@@ -549,9 +549,9 @@ ggplot(stock_prices, aes(x = date)) +
 
 
 ## Topic Distribution by Company
-Extracts the topic distribution for each document (gamma values).
+# Extracts the topic distribution for each document (gamma values).
 Joins topic distributions with company names.
-Visualizes the topic proportions for each company in a grouped bar chart.
+# Visualizes the topic proportions for each company in a grouped bar chart.
 
 ```{r}
 
@@ -683,9 +683,9 @@ pm_links <- read_html(remDr$getPageSource()[[1]]) %>%
   filter(str_detect(text,"transcript")) %>% 
   filter(str_detect(text,"https:")) 
 
-Next get the url link for the opened page
+# Next get the url link for the opened page
 then use selector to scrape and save text data 
-then exit opened url and back to original for the loop. 
+# then exit opened url and back to original for the loop. 
 
 
 
